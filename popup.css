@@ -16,6 +16,14 @@ body {
     position: relative;
 }
 
+/* 预览模式样式 */
+body.preview-mode {
+    width: 100%;
+    max-width: 600px;
+    margin: 20px auto;
+    min-height: auto;
+}
+
 body::before {
     content: '';
     position: fixed;
@@ -781,11 +789,16 @@ button:disabled {
     background: rgba(255, 255, 255, 0.5);
 }
 
-/* 响应式设计 */
+/* 响应式设计 - Chrome扩展弹窗保持固定尺寸 */
 @media (max-width: 520px) {
-    body {
-        width: 100vw;
-        min-height: 100vh;
+    body:not(.preview-mode) {
+        width: 480px;
+        min-height: 700px;
+    }
+
+    body.preview-mode {
+        width: 100%;
+        margin: 10px;
     }
 
     .container {
