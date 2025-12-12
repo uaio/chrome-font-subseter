@@ -309,8 +309,14 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        // 生成字体数据
-        return subsetFont.toArrayBuffer();
+        // 生成字体数据 - 使用 toArrayBuffer 或降级到 mock
+        try {
+            return subsetFont.toArrayBuffer();
+        } catch (e) {
+            // 如果 toArrayBuffer 失败，降级到 mock
+            console.warn('OpenType.js toArrayBuffer failed, using mock subset:', e);
+            return await createMockSubset(charsToKeep);
+        }
     }
 
     async function createMockSubset(charsToKeep) {
