@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>字体子集化工具 - 安装指南</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header p {
+            font-size: 18px;
+            color: #666;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .install-section {
+            margin-bottom: 40px;
+            padding: 30px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .install-section h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+
+        .steps {
+            list-style: none;
+        }
+
+        .steps li {
+            margin-bottom: 15px;
+            padding-left: 30px;
+            position: relative;
+        }
+
+        .steps li:before {
+            content: attr(data-step);
+            position: absolute;
+            left: 0;
+            top: 0;
+            background: #4CAF50;
+            color: white;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            text-align: center;
+            font-size: 12px;
+            line-height: 20px;
+        }
+
+        .download-btn {
+            display: inline-block;
+            padding: 15px 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 30px;
+            font-size: 18px;
+            font-weight: 600;
+            margin: 20px 0;
+            transition: transform 0.2s;
+        }
+
+        .download-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .video-container {
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+            overflow: hidden;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+
+        .screenshot {
+            width: 100%;
+            max-width: 600px;
+            border-radius: 8px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            margin: 20px 0;
+        }
+
+        .note {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .feature-card {
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        .feature-icon {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>字体子集化工具</h1>
+            <p>轻松创建字体子集，优化网页加载速度</p>
+            <a href="./chrome-font-subseter-v1.0.0.zip" class="download-btn" download>
+                📦 下载插件 (v1.0.0)
+            </a>
+        </div>
+
+        <div class="content">
+            <div class="install-section">
+                <h2>🚀 快速安装（三步完成）</h2>
+                <ul class="steps">
+                    <li data-step="1">下载插件压缩包</li>
+                    <li data-step="2">打开Chrome扩展管理页（地址栏输入 <code>chrome://extensions/</code>）</li>
+                    <li data-step="3">开启"开发者模式"，点击"加载已解压的扩展程序"，选择解压后的文件夹</li>
+                </ul>
+
+                <div class="note">
+                    <strong>提示：</strong>如果您是第一次安装，请确保下载的是从官方GitHub仓库获取的文件
+                </div>
+            </div>
+
+            <div class="install-section">
+                <h2>📸 安装演示</h2>
+                <img src="./screenshots/install.gif" alt="安装演示" class="screenshot">
+                <p style="text-align: center; color: #666;">动图：安装过程演示</p>
+            </div>
+
+            <div class="install-section">
+                <h2>✨ 功能特点</h2>
+                <div class="features">
+                    <div class="feature-card">
+                        <div class="feature-icon">📁</div>
+                        <h3>多格式支持</h3>
+                        <p>TTF、OTF、WOFF、WOFF2</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">⚡</div>
+                        <h3>快捷字符</h3>
+                        <p>内置常用字符集</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">👁️</div>
+                        <h3>实时预览</h3>
+                        <p>即时查看效果</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">📊</div>
+                        <h3>压缩统计</h3>
+                        <p>显示优化效果</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="install-section">
+                <h2>❓ 常见问题</h2>
+                <ul style="list-style-type: disc; padding-left: 20px;">
+                    <li><strong>提示"扩展程序无效"？</strong> - 确保解压后包含 manifest.json 文件</li>
+                    <li><strong>如何更新？</strong> - 下载新版本重新安装即可</li>
+                    <li><strong>支持哪些浏览器？</strong> - Chrome、Edge、Brave 等Chromium内核浏览器</li>
+                    <li><strong>需要权限吗？</strong> - 不需要任何特殊权限，完全本地运行</li>
+                </ul>
+            </div>
+
+            <div class="install-section">
+                <h2>📚 更多资源</h2>
+                <ul style="list-style-type: disc; padding-left: 20px;">
+                    <li><a href="https://github.com/uaio/chrome-font-subseter" target="_blank">GitHub 项目主页</a></li>
+                    <li><a href="https://github.com/uaio/chrome-font-subseter/issues" target="_blank">问题反馈</a></li>
+                    <li><a href="./README.md" target="_blank">详细文档</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
