@@ -15,13 +15,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const originalSize = document.getElementById('original-size');
     const subsetSize = document.getElementById('subset-size');
     const compressionRate = document.getElementById('compression-rate');
-    const combinedSection = document.getElementById('combined-section');
-    const previewSample = document.getElementById('preview-sample');
-    const customPreviewText = document.getElementById('custom-preview-text');
+    const fontPreview = document.getElementById('font-preview');
+    const previewText = document.getElementById('preview-text');
     const downloadSection = document.getElementById('download-section');
     const downloadBtn = document.getElementById('download-subset');
     const formatRadios = document.querySelectorAll('input[name="format"]');
-    const formatText = document.querySelector('.format-text');
     const charBtns = document.querySelectorAll('.char-btn');
 
     // 全局变量
@@ -54,6 +52,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // 字符输入
         charInput.addEventListener('input', () => {
             updateCharStats();
+            updatePreview();
             checkGenerateButton();
         });
 
@@ -61,6 +60,7 @@ document.addEventListener('DOMContentLoaded', function() {
         clearCharsBtn.addEventListener('click', () => {
             charInput.value = '';
             updateCharStats();
+            updatePreview();
             checkGenerateButton();
         });
 
@@ -73,17 +73,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     btn.style.transform = '';
                 }, 150);
 
-                let chars = btn.dataset.chars;
-                // 处理特殊字符映射
-                if (chars === 'A-Z') chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-                if (chars === 'a-z') chars = 'abcdefghijklmnopqrstuvwxyz';
-                if (chars === '常用汉字') {
-                    chars = '的一是了我不人在他有这个上们来到时大地为子中你说生国年着就那和要她出也得里后自以会家可下而过天去能对小多然于心学么之都好看起发当没成只如事把还用第样道想作种开美总从无情面最女但现前些所同日手又行意动方期它头经长儿回位分爱老因很给名法间斯知世什两次使身者被高已亲其进此话常与活正感';
-                }
-                if (chars === '中文') {
-                    chars = '，。、；：？！「」『（）［］｛｝【】《》〈〉""''';
-                }
-
+                const chars = btn.dataset.chars;
                 const currentChars = charInput.value;
                 const combinedChars = currentChars + chars;
                 const uniqueChars = [...new Set(combinedChars)].join('');
@@ -93,6 +83,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 charInput.focus();
 
                 updateCharStats();
+                updatePreview();
                 checkGenerateButton();
 
                 // 显示添加了多少个字符
@@ -108,9 +99,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // 下载子集
         downloadBtn.addEventListener('click', downloadSubset);
-
-        // 预览功能
-        customPreviewText.addEventListener('input', updatePreview);
 
         // 格式选择
         formatRadios.forEach(radio => {
@@ -171,17 +159,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 const arrayBuffer = e.target.result;
                 if (window.opentype) {
                     fontData = window.opentype.parse(arrayBuffer);
-                    // 显示预览区域
-                    combinedSection.classList.add('show');
-                    // 使用原始字体进行预览
-                    updateOriginalFontPreview();
                 } else {
                     // 如果没有库，只保存原始数据
                     fontData = arrayBuffer;
-                    // 显示预览区域
-                    combinedSection.classList.add('show');
-                    updateOriginalFontPreview();
                 }
+                // 显示预览区域
+                fontPreview.style.display = 'block';
+                updatePreview();
                 checkGenerateButton();
             } catch (error) {
                 console.error('解析字体失败:', error);
@@ -202,7 +186,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // 重置所有状态
         generatedSubset = null;
         outputInfo.style.display = 'none';
-        combinedSection.classList.remove('show');
+        fontPreview.style.display = 'none';
         downloadSection.style.display = 'none';
 
         // 清理预览样式
@@ -264,9 +248,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // 更新UI
             updateOutputInfo();
-
-            // 显示预览区域（带动画效果）
-            combinedSection.classList.add('show');
 
             downloadSection.style.display = 'block';
 
@@ -464,13 +445,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 font-family: '${fontName}';
                 src: url('${fontUrl}') format('${format}');
             }
-            #preview-sample {
+            #preview-text {
                 font-family: '${fontName}', monospace !important;
             }
         `;
-
-        // 更新预览文本
-        previewSample.textContent = text;
 
         // 清理旧URL
         if (window.previewFontUrl) {
@@ -481,7 +459,26 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // 更新预览
     function updatePreview() {
-        const text = customPreviewText.value.trim() || '字体预览示例 Font Preview Sample';
+        // 如果没有字体文件，不显示预览
+        if (!fontFile) {
+            fontPreview.style.display = 'none';
+            return;
+        }
+
+        // 显示预览区域
+        fontPreview.style.display = 'block';
+
+        // 获取输入的字符，如果没有则使用默认文本
+        const chars = charInput.value.trim();
+        let text = chars;
+
+        // 如果字符为空，显示默认提示
+        if (!chars) {
+            text = '请输入需要保留的字符';
+        } else if (chars.length > 100) {
+            // 如果字符太多，只显示前100个
+            text = chars.substring(0, 100) + '...';
+        }
 
         // 如果有子集字体，使用子集；否则使用原始字体
         if (generatedSubset) {
@@ -507,13 +504,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     font-family: '${fontName}';
                     src: url('${fontUrl}') format('${format}');
                 }
-                #preview-sample {
+                #preview-text {
                     font-family: '${fontName}', monospace !important;
                 }
             `;
 
             // 更新预览文本
-            previewSample.textContent = text;
+            previewText.textContent = text;
 
             // 清理旧URL
             if (window.previewFontUrl) {
@@ -523,10 +520,8 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             // 使用原始字体
             updateOriginalFontPreview();
-            // 更新预览文本为用户输入的内容
-            if (customPreviewText.value.trim()) {
-                previewSample.textContent = text;
-            }
+            // 更新预览文本
+            previewText.textContent = text;
         }
     }
 
@@ -544,7 +539,13 @@ document.addEventListener('DOMContentLoaded', function() {
     // 更新下载按钮
     function updateDownloadButton() {
         const format = document.querySelector('input[name="format"]:checked').value;
-        formatText.textContent = format.toUpperCase();
+        const formatNames = {
+            'woff2': 'WOFF2',
+            'woff': 'WOFF',
+            'ttf': 'TTF',
+            'otf': 'OTF'
+        };
+        downloadBtn.textContent = `下载字体子集 (${formatNames[format]})`;
     }
 
     // 更新下载函数
