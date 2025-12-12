@@ -15,8 +15,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const originalSize = document.getElementById('original-size');
     const subsetSize = document.getElementById('subset-size');
     const compressionRate = document.getElementById('compression-rate');
+    const previewSection = document.getElementById('preview-section');
+    const previewSample = document.getElementById('preview-sample');
+    const customPreviewText = document.getElementById('custom-preview-text');
     const downloadSection = document.getElementById('download-section');
     const downloadBtn = document.getElementById('download-subset');
+    const formatRadios = document.querySelectorAll('input[name="format"]');
     const charBtns = document.querySelectorAll('.char-btn');
 
     // 全局变量
@@ -93,6 +97,19 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // 下载子集
         downloadBtn.addEventListener('click', downloadSubset);
+
+        // 预览功能
+        customPreviewText.addEventListener('input', updatePreview);
+
+        // 格式选择
+        formatRadios.forEach(radio => {
+            radio.addEventListener('change', () => {
+                // 如果有生成的子集，可以在这里预切换时更新信息
+                if (generatedSubset) {
+                    updateDownloadButton();
+                }
+            });
+        });
     }
 
     function handleFileSelect(e) {
@@ -167,6 +184,19 @@ document.addEventListener('DOMContentLoaded', function() {
         fontInput.value = '';
         uploadPlaceholder.style.display = 'block';
         fileInfo.style.display = 'none';
+
+        // 重置所有状态
+        generatedSubset = null;
+        outputInfo.style.display = 'none';
+        previewSection.style.display = 'none';
+        downloadSection.style.display = 'none';
+
+        // 清理预览样式
+        const previewStyle = document.getElementById('preview-font-style');
+        if (previewStyle) {
+            previewStyle.remove();
+        }
+
         checkGenerateButton();
     }
 
@@ -220,7 +250,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // 更新UI
             updateOutputInfo();
+            previewSection.style.display = 'block';
             downloadSection.style.display = 'block';
+
+            // 更新预览
+            updatePreview();
 
             // 显示成功消息
             showMessage('字体子集生成成功！', 'success');
@@ -311,35 +345,7 @@ document.addEventListener('DOMContentLoaded', function() {
         return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
     }
 
-    function downloadSubset() {
-        if (!generatedSubset) return;
-
-        // 创建下载链接
-        const blob = new Blob([generatedSubset], { type: 'font/woff2' });
-        const url = URL.createObjectURL(blob);
-
-        // 获取文件名
-        const originalName = fontFile.name;
-        const nameWithoutExt = originalName.substring(0, originalName.lastIndexOf('.')) || originalName;
-        const extension = originalName.includes('.woff2') ? '.woff2' :
-                         originalName.includes('.woff') ? '.woff' : '.woff2';
-        const fileName = `${nameWithoutExt}_subset${extension}`;
-
-        // 创建下载链接并触发下载
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = fileName;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-
-        // 清理URL
-        URL.revokeObjectURL(url);
-
-        // 显示成功消息
-        showMessage('字体子集下载成功！', 'success');
-    }
-
+    
     // 显示消息提示
     function showMessage(text, type = 'success') {
         // 移除现有消息
@@ -401,5 +407,102 @@ document.addEventListener('DOMContentLoaded', function() {
         if (progressBar) {
             progressBar.remove();
         }
+    }
+
+    // 更新预览
+    function updatePreview() {
+        if (!generatedSubset) return;
+
+        const text = customPreviewText.value.trim() || '字体预览示例 Font Preview Sample';
+        const format = document.querySelector('input[name="format"]:checked').value;
+
+        // 创建字体URL
+        const blob = new Blob([generatedSubset], { type: getFontMimeType(format) });
+        const fontUrl = URL.createObjectURL(blob);
+
+        // 创建字体名称
+        const fontName = 'CustomFont_' + Date.now();
+
+        // 创建样式
+        let style = document.getElementById('preview-font-style');
+        if (!style) {
+            style = document.createElement('style');
+            style.id = 'preview-font-style';
+            document.head.appendChild(style);
+        }
+
+        style.textContent = `
+            @font-face {
+                font-family: '${fontName}';
+                src: url('${fontUrl}') format('${format}');
+            }
+            #preview-sample {
+                font-family: '${fontName}', monospace !important;
+            }
+        `;
+
+        // 更新预览文本
+        previewSample.textContent = text;
+
+        // 清理旧URL
+        if (window.previewFontUrl) {
+            URL.revokeObjectURL(window.previewFontUrl);
+        }
+        window.previewFontUrl = fontUrl;
+    }
+
+    // 获取字体MIME类型
+    function getFontMimeType(format) {
+        const mimeTypes = {
+            'woff2': 'font/woff2',
+            'woff': 'font/woff',
+            'ttf': 'font/ttf',
+            'otf': 'font/otf'
+        };
+        return mimeTypes[format] || 'font/woff2';
+    }
+
+    // 更新下载按钮
+    function updateDownloadButton() {
+        const format = document.querySelector('input[name="format"]:checked').value;
+        const formatNames = {
+            'woff2': 'WOFF2',
+            'woff': 'WOFF',
+            'ttf': 'TTF',
+            'otf': 'OTF'
+        };
+        downloadBtn.textContent = `下载字体子集 (${formatNames[format]})`;
+    }
+
+    // 更新下载函数
+    function downloadSubset() {
+        if (!generatedSubset) return;
+
+        // 获取选中的格式
+        const format = document.querySelector('input[name="format"]:checked').value;
+
+        // 创建下载链接
+        const mimeType = getFontMimeType(format);
+        const blob = new Blob([generatedSubset], { type: mimeType });
+        const url = URL.createObjectURL(blob);
+
+        // 获取文件名
+        const originalName = fontFile.name;
+        const nameWithoutExt = originalName.substring(0, originalName.lastIndexOf('.')) || originalName;
+        const fileName = `${nameWithoutExt}_subset.${format}`;
+
+        // 创建下载链接并触发下载
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+
+        // 清理URL
+        URL.revokeObjectURL(url);
+
+        // 显示成功消息
+        showMessage(`字体子集 (${format.toUpperCase()}) 下载成功！`, 'success');
     }
 });

@@ -37,7 +37,7 @@
                 <button class="char-btn" data-chars="ABCDEFGHIJKLMNOPQRSTUVWXYZ">大写字母 (A-Z)</button>
                 <button class="char-btn" data-chars="abcdefghijklmnopqrstuvwxyz">小写字母 (a-z)</button>
                 <button class="char-btn" data-chars="!@#$%^&*()_+-=[]{}|;':\",./<>?">标点符号</button>
-                <button class="char-btn" data-chars="的一是了我不人在他有这个上们来到时大地为子中你说生国年着就那和要她出也得里后自以会家可下而过天去能对小多然于心学么之都好看起发当没成只如事把还用第样道想作种开美总从无情面最女但现前些所同日手又行意动方期它头经长儿回位分爱老因很给名法间斯知世什两次使身者被高已亲其进此话常与活正感"></button>
+                <button class="char-btn" data-chars="的一是了我不人在他有这个上们来到时大地为子中你说生国年着就那和要她出也得里后自以会家可下而过天去能对小多然于心学么之都好看起发当没成只如事把还用第样道想作种开美总从无情面最女但现前些所同日手又行意动方期它头经长儿回位分爱老因很给名法间斯知世什两次使身者被高已亲其进此话常与活正感">常用汉字</button>
                 <button class="char-btn" data-chars="，。、；：？！「」『（）［］｛｝【】《》〈〉""''">中文标点</button>
             </div>
         </div>
@@ -65,10 +65,45 @@
             </div>
         </div>
 
+        <div class="section" id="preview-section" style="display: none;">
+            <h2>字体预览</h2>
+            <div class="preview-area">
+                <div class="preview-text">
+                    <p id="preview-sample">字体预览示例 Font Preview Sample</p>
+                    <textarea id="custom-preview-text" placeholder="输入自定义预览文本..." rows="3"></textarea>
+                </div>
+            </div>
+        </div>
+
         <div class="section" id="download-section" style="display: none;">
-            <button id="download-subset" class="btn-success">
-                下载字体子集
-            </button>
+            <h2>下载字体子集</h2>
+            <div class="download-options">
+                <div class="format-selector">
+                    <label>
+                        <input type="radio" name="format" value="woff2" checked>
+                        <span>WOFF2</span>
+                        <small>推荐 - 体积最小</small>
+                    </label>
+                    <label>
+                        <input type="radio" name="format" value="woff">
+                        <span>WOFF</span>
+                        <small>兼容性好</small>
+                    </label>
+                    <label>
+                        <input type="radio" name="format" value="ttf">
+                        <span>TTF</span>
+                        <small>通用格式</small>
+                    </label>
+                    <label>
+                        <input type="radio" name="format" value="otf">
+                        <span>OTF</span>
+                        <small>高质量</small>
+                    </label>
+                </div>
+                <button id="download-subset" class="btn-success">
+                    下载字体子集
+                </button>
+            </div>
         </div>
     </div>
 

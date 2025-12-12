@@ -80,10 +80,45 @@
             </div>
         </div>
 
+        <div class="section" id="preview-section" style="display: none;">
+            <h2>字体预览</h2>
+            <div class="preview-area">
+                <div class="preview-text">
+                    <p id="preview-sample">字体预览示例 Font Preview Sample</p>
+                    <textarea id="custom-preview-text" placeholder="输入自定义预览文本..." rows="3"></textarea>
+                </div>
+            </div>
+        </div>
+
         <div class="section" id="download-section" style="display: none;">
-            <button id="download-subset" class="btn-success">
-                下载字体子集
-            </button>
+            <h2>下载字体子集</h2>
+            <div class="download-options">
+                <div class="format-selector">
+                    <label>
+                        <input type="radio" name="format" value="woff2" checked>
+                        <span>WOFF2</span>
+                        <small>推荐 - 体积最小</small>
+                    </label>
+                    <label>
+                        <input type="radio" name="format" value="woff">
+                        <span>WOFF</span>
+                        <small>兼容性好</small>
+                    </label>
+                    <label>
+                        <input type="radio" name="format" value="ttf">
+                        <span>TTF</span>
+                        <small>通用格式</small>
+                    </label>
+                    <label>
+                        <input type="radio" name="format" value="otf">
+                        <span>OTF</span>
+                        <small>高质量</small>
+                    </label>
+                </div>
+                <button id="download-subset" class="btn-success">
+                    下载字体子集
+                </button>
+            </div>
         </div>
     </div>
 
