@@ -6,6 +6,22 @@
     box-sizing: border-box;
 }
 
+html, body {
+    margin: 0;
+    padding: 0;
+    border: none;
+    outline: none;
+    overflow: hidden;
+    width: 100%;
+    height: 100%;
+}
+
+/* 确保根元素也没有边距 */
+:root {
+    margin: 0;
+    padding: 0;
+}
+
 body {
     width: 480px;
     min-height: 700px;
@@ -17,6 +33,8 @@ body {
     overflow: hidden;
     margin: 0;
     padding: 0;
+    border: none;
+    outline: none;
 }
 
 /* 预览模式样式 */
@@ -42,6 +60,9 @@ body::before {
     padding: 24px;
     position: relative;
     z-index: 1;
+    width: 100%;
+    max-width: 480px;
+    margin: 0 auto;
 }
 
 h1 {
