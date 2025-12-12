@@ -250,14 +250,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // 更新UI
             updateOutputInfo();
-            previewSection.style.display = 'block';
+
+            // 显示预览区域（带动画效果）
+            previewSection.classList.add('show');
+
             downloadSection.style.display = 'block';
 
             // 更新预览
             updatePreview();
 
             // 显示成功消息
-            showMessage('字体子集生成成功！', 'success');
+            showMessage('字体子集生成成功！预览区域已显示', 'success');
 
         } catch (error) {
             console.error('生成子集失败:', error);
