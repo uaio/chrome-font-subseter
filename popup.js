@@ -172,14 +172,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (window.opentype) {
                     fontData = window.opentype.parse(arrayBuffer);
                     // 显示预览区域
-                    combinedSection.style.display = 'grid';
+                    combinedSection.classList.add('show');
                     // 使用原始字体进行预览
                     updateOriginalFontPreview();
                 } else {
                     // 如果没有库，只保存原始数据
                     fontData = arrayBuffer;
                     // 显示预览区域
-                    combinedSection.style.display = 'grid';
+                    combinedSection.classList.add('show');
                     updateOriginalFontPreview();
                 }
                 checkGenerateButton();
@@ -202,7 +202,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // 重置所有状态
         generatedSubset = null;
         outputInfo.style.display = 'none';
-        combinedSection.style.display = 'none';
+        combinedSection.classList.remove('show');
         downloadSection.style.display = 'none';
 
         // 清理预览样式
@@ -266,7 +266,7 @@ document.addEventListener('DOMContentLoaded', function() {
             updateOutputInfo();
 
             // 显示预览区域（带动画效果）
-            combinedSection.style.display = 'grid';
+            combinedSection.classList.add('show');
 
             downloadSection.style.display = 'block';
 

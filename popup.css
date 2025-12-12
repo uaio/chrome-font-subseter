@@ -979,15 +979,20 @@ button:disabled {
 
 /* 合并区域样式 */
 .combined-section {
-    display: none;
-    margin: 16px 0;
-    gap: 16px;
-}
-
-.combined-section.show {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 16px;
+    margin: 16px 0;
+    visibility: hidden;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.3s ease;
+}
+
+.combined-section.show {
+    visibility: visible;
+    opacity: 1;
+    transform: translateY(0);
 }
 
 /* 预览区域紧凑样式 */
