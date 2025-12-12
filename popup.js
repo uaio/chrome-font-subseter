@@ -62,13 +62,29 @@ document.addEventListener('DOMContentLoaded', function() {
         // 快捷字符按钮
         charBtns.forEach(btn => {
             btn.addEventListener('click', () => {
+                // 添加点击反馈效果
+                btn.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    btn.style.transform = '';
+                }, 150);
+
                 const chars = btn.dataset.chars;
                 const currentChars = charInput.value;
                 const combinedChars = currentChars + chars;
                 const uniqueChars = [...new Set(combinedChars)].join('');
                 charInput.value = uniqueChars;
+
+                // 聚焦到输入框
+                charInput.focus();
+
                 updateCharStats();
                 checkGenerateButton();
+
+                // 显示添加了多少个字符
+                const addedCount = chars.length - [...new Set(chars)].filter(c => currentChars.includes(c)).length;
+                if (addedCount > 0) {
+                    showMessage(`已添加 ${addedCount} 个新字符`, 'success');
+                }
             });
         });
 
@@ -109,7 +125,7 @@ document.addEventListener('DOMContentLoaded', function() {
     async function processFontFile(file) {
         // 检查文件类型
         if (!file.type.match(/font.*/)) {
-            alert('请选择字体文件');
+            showMessage('请选择有效的字体文件！', 'error');
             return;
         }
 
@@ -171,18 +187,26 @@ document.addEventListener('DOMContentLoaded', function() {
 
     async function generateSubset() {
         if (!fontFile || !charInput.value.trim()) {
-            alert('请上传字体文件并输入字符');
+            showMessage('请上传字体文件并输入需要保留的字符！', 'error');
             return;
         }
 
-        generateBtn.disabled = true;
-        generateBtn.textContent = '正在生成子集...';
+        // 添加加载状态
+        const originalBtnText = addLoadingState(generateBtn, '正在生成子集...');
+
+        // 添加进度条
+        const progressFill = addProgressBar(generateBtn.parentElement);
 
         try {
             // 获取需要保留的字符
             const charsToKeep = [...new Set(charInput.value)];
 
+            // 模拟进度更新
+            updateProgress(progressFill, 20);
+            await new Promise(resolve => setTimeout(resolve, 100));
+
             // 如果有opentype.js库，使用它来生成子集
+            updateProgress(progressFill, 50);
             if (window.opentype && fontData && fontData.glyphs) {
                 generatedSubset = await createSubsetWithOpenType(fontData, charsToKeep);
             } else {
@@ -190,16 +214,26 @@ document.addEventListener('DOMContentLoaded', function() {
                 generatedSubset = await createMockSubset(charsToKeep);
             }
 
+            updateProgress(progressFill, 90);
+            await new Promise(resolve => setTimeout(resolve, 100));
+            updateProgress(progressFill, 100);
+
             // 更新UI
             updateOutputInfo();
             downloadSection.style.display = 'block';
 
+            // 显示成功消息
+            showMessage('字体子集生成成功！', 'success');
+
         } catch (error) {
             console.error('生成子集失败:', error);
-            alert('生成字体子集失败: ' + error.message);
+            showMessage('生成字体子集失败: ' + error.message, 'error');
         } finally {
-            generateBtn.disabled = false;
-            generateBtn.textContent = '生成字体子集';
+            // 移除加载状态
+            removeLoadingState(generateBtn, originalBtnText);
+
+            // 移除进度条
+            removeProgressBar(generateBtn.parentElement);
         }
     }
 
@@ -301,5 +335,71 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // 清理URL
         URL.revokeObjectURL(url);
+
+        // 显示成功消息
+        showMessage('字体子集下载成功！', 'success');
+    }
+
+    // 显示消息提示
+    function showMessage(text, type = 'success') {
+        // 移除现有消息
+        const existingMessage = document.querySelector('.success-message, .error-message');
+        if (existingMessage) {
+            existingMessage.remove();
+        }
+
+        // 创建新消息
+        const message = document.createElement('div');
+        message.className = type === 'success' ? 'success-message' : 'error-message';
+        message.textContent = text;
+        document.body.appendChild(message);
+
+        // 自动移除
+        setTimeout(() => {
+            if (message.parentNode) {
+                message.remove();
+            }
+        }, 3000);
+    }
+
+    // 添加加载状态
+    function addLoadingState(element, loadingText) {
+        element.classList.add('processing');
+        const originalText = element.textContent;
+        element.textContent = loadingText;
+        return originalText;
+    }
+
+    // 移除加载状态
+    function removeLoadingState(element, originalText) {
+        element.classList.remove('processing');
+        element.textContent = originalText;
+    }
+
+    // 添加进度条
+    function addProgressBar(container) {
+        const existingBar = container.querySelector('.progress-bar');
+        if (existingBar) existingBar.remove();
+
+        const progressBar = document.createElement('div');
+        progressBar.className = 'progress-bar';
+        progressBar.innerHTML = '<div class="progress-fill" style="width: 0%"></div>';
+        container.appendChild(progressBar);
+        return progressBar.querySelector('.progress-fill');
+    }
+
+    // 更新进度
+    function updateProgress(progressFill, percentage) {
+        if (progressFill) {
+            progressFill.style.width = Math.min(100, Math.max(0, percentage)) + '%';
+        }
+    }
+
+    // 移除进度条
+    function removeProgressBar(container) {
+        const progressBar = container.querySelector('.progress-bar');
+        if (progressBar) {
+            progressBar.remove();
+        }
     }
 });
