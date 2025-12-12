@@ -153,20 +153,24 @@ document.addEventListener('DOMContentLoaded', function() {
         uploadPlaceholder.style.display = 'none';
         fileInfo.style.display = 'flex';
 
-        // 读取字体文件
+        // 读取字体数据用于预览
         const reader = new FileReader();
-        reader.onload = async function(e) {
+        reader.onload = function(e) {
             try {
                 const arrayBuffer = e.target.result;
-
-                // 如果有opentype.js库，解析字体
                 if (window.opentype) {
                     fontData = window.opentype.parse(arrayBuffer);
+                    // 显示预览区域
+                    previewSection.classList.add('show');
+                    // 使用原始字体进行预览
+                    updateOriginalFontPreview();
                 } else {
                     // 如果没有库，只保存原始数据
                     fontData = arrayBuffer;
+                    // 显示预览区域
+                    previewSection.classList.add('show');
+                    updateOriginalFontPreview();
                 }
-
                 checkGenerateButton();
             } catch (error) {
                 console.error('解析字体失败:', error);
@@ -174,7 +178,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 removeFile();
             }
         };
-
         reader.readAsArrayBuffer(file);
     }
 
@@ -188,7 +191,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // 重置所有状态
         generatedSubset = null;
         outputInfo.style.display = 'none';
-        previewSection.style.display = 'none';
+        previewSection.classList.remove('show');
         downloadSection.style.display = 'none';
 
         // 清理预览样式
@@ -260,7 +263,7 @@ document.addEventListener('DOMContentLoaded', function() {
             updatePreview();
 
             // 显示成功消息
-            showMessage('字体子集生成成功！预览区域已显示', 'success');
+            showMessage('字体子集生成成功！', 'success');
 
         } catch (error) {
             console.error('生成子集失败:', error);
@@ -418,19 +421,17 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // 更新预览
-    function updatePreview() {
-        if (!generatedSubset) return;
+    // 更新原始字体预览（使用上传的完整字体）
+    function updateOriginalFontPreview() {
+        if (!fontFile) return;
 
-        const text = customPreviewText.value.trim() || '字体预览示例 Font Preview Sample';
-        const format = document.querySelector('input[name="format"]:checked').value;
+        const text = '字体预览示例 Font Preview Sample 0123456789';
 
         // 创建字体URL
-        const blob = new Blob([generatedSubset], { type: getFontMimeType(format) });
-        const fontUrl = URL.createObjectURL(blob);
+        const fontUrl = URL.createObjectURL(fontFile);
 
         // 创建字体名称
-        const fontName = 'CustomFont_' + Date.now();
+        const fontName = 'OriginalFont_' + Date.now();
 
         // 创建样式
         let style = document.getElementById('preview-font-style');
@@ -439,6 +440,13 @@ document.addEventListener('DOMContentLoaded', function() {
             style.id = 'preview-font-style';
             document.head.appendChild(style);
         }
+
+        // 获取文件扩展名
+        const fileName = fontFile.name.toLowerCase();
+        const format = fileName.endsWith('.woff2') ? 'woff2' :
+                       fileName.endsWith('.woff') ? 'woff' :
+                       fileName.endsWith('.ttf') ? 'truetype' :
+                       fileName.endsWith('.otf') ? 'opentype' : 'truetype';
 
         style.textContent = `
             @font-face {
@@ -458,6 +466,57 @@ document.addEventListener('DOMContentLoaded', function() {
             URL.revokeObjectURL(window.previewFontUrl);
         }
         window.previewFontUrl = fontUrl;
+    }
+
+    // 更新预览
+    function updatePreview() {
+        const text = customPreviewText.value.trim() || '字体预览示例 Font Preview Sample';
+
+        // 如果有子集字体，使用子集；否则使用原始字体
+        if (generatedSubset) {
+            const format = document.querySelector('input[name="format"]:checked').value;
+
+            // 创建字体URL
+            const blob = new Blob([generatedSubset], { type: getFontMimeType(format) });
+            const fontUrl = URL.createObjectURL(blob);
+
+            // 创建字体名称
+            const fontName = 'CustomFont_' + Date.now();
+
+            // 创建样式
+            let style = document.getElementById('preview-font-style');
+            if (!style) {
+                style = document.createElement('style');
+                style.id = 'preview-font-style';
+                document.head.appendChild(style);
+            }
+
+            style.textContent = `
+                @font-face {
+                    font-family: '${fontName}';
+                    src: url('${fontUrl}') format('${format}');
+                }
+                #preview-sample {
+                    font-family: '${fontName}', monospace !important;
+                }
+            `;
+
+            // 更新预览文本
+            previewSample.textContent = text;
+
+            // 清理旧URL
+            if (window.previewFontUrl) {
+                URL.revokeObjectURL(window.previewFontUrl);
+            }
+            window.previewFontUrl = fontUrl;
+        } else {
+            // 使用原始字体
+            updateOriginalFontPreview();
+            // 更新预览文本为用户输入的内容
+            if (customPreviewText.value.trim()) {
+                previewSample.textContent = text;
+            }
+        }
     }
 
     // 获取字体MIME类型
