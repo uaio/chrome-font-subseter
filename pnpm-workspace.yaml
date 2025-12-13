@@ -1,0 +1,5 @@
+packages:
+  # packages目录下的核心库
+  - 'packages/*'
+  # apps目录下的应用
+  - 'apps/*'

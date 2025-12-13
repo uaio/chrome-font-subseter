@@ -1,0 +1,88 @@
+{
+  "name": "@font-subseter/vscode-extension",
+  "displayName": "Font Subseter",
+  "description": "字体子集化工具 - 创建字体子集，减小文件大小",
+  "version": "1.0.0",
+  "publisher": "uaio",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "font",
+    "subset",
+    "web",
+    "optimization"
+  ],
+  "activationEvents": [
+    "onCommand:fontSubseter.createSubset"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "fontSubseter.createSubset",
+        "title": "创建字体子集",
+        "icon": "$(file-media)"
+      }
+    ],
+    "menus": {
+      "explorer/context": [
+        {
+          "command": "fontSubseter.createSubset",
+          "group": "navigation",
+          "when": "resourceExtname =~ /\\.ttf$|\\.otf$|\\.woff$|\\.woff2$/"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "fontSubseter.createSubset",
+          "when": "resourceExtname =~ /\\.ttf$|\\.otf$|\\.woff$|\\.woff2$/"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Font Subseter",
+      "properties": {
+        "fontSubseter.defaultOutputFormat": {
+          "type": "string",
+          "enum": ["ttf", "otf", "woff", "woff2"],
+          "default": "woff2",
+          "description": "默认输出格式"
+        },
+        "fontSubseter.preserveMetadata": {
+          "type": "boolean",
+          "default": true,
+          "description": "是否保留字体元数据"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js"
+  },
+  "dependencies": {
+    "@font-subseter/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.85.0",
+    "@types/node": "18.x",
+    "@typescript-eslint/eslint-plugin": "^6.13.0",
+    "@typescript-eslint/parser": "^6.13.0",
+    "eslint": "^8.54.0",
+    "typescript": "^5.3.0"
+  },
+  "author": "uaio",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/uaio/chrome-font-subseter.git"
+  }
+}

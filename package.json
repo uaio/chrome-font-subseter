@@ -1,0 +1,59 @@
+{
+  "name": "font-subseter",
+  "version": "1.0.0",
+  "description": "字体子集化工具 - 创建字体子集，减小文件大小",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "pnpm -r build",
+    "build:core": "pnpm --filter @font-subseter/core build",
+    "build:chrome": "pnpm --filter @font-subseter/chrome-extension build",
+    "build:vscode": "pnpm --filter @font-subseter/vscode-extension compile",
+    "dev": "pnpm -r dev",
+    "dev:core": "pnpm --filter @font-subseter/core dev",
+    "dev:chrome": "pnpm --filter @font-subseter/chrome-extension dev",
+    "clean": "pnpm -r clean",
+    "test": "pnpm -r test",
+    "lint": "eslint packages apps --ext .ts,.tsx",
+    "lint:fix": "eslint packages apps --ext .ts,.tsx --fix",
+    "format": "prettier --write \"packages/**/*.{ts,tsx}\" \"apps/**/*.{ts,tsx,js,jsx,json,md}\"",
+    "format:check": "prettier --check \"packages/**/*.{ts,tsx}\" \"apps/**/*.{ts,tsx,js,jsx,json,md}\"",
+    "typecheck": "pnpm -r typecheck",
+    "install:all": "pnpm install",
+    "changeset": "changeset",
+    "version-packages": "changeset version",
+    "release": "pnpm build && changeset publish"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.27.0",
+    "@typescript-eslint/eslint-plugin": "^6.13.0",
+    "@typescript-eslint/parser": "^6.13.0",
+    "eslint": "^8.54.0",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-prettier": "^5.0.0",
+    "eslint-plugin-react": "^7.33.0",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "prettier": "^3.1.0",
+    "typescript": "^5.3.0"
+  },
+  "keywords": [
+    "font",
+    "subset",
+    "web",
+    "optimization",
+    "chrome-extension",
+    "vscode-extension",
+    "monorepo"
+  ],
+  "author": "uaio",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/uaio/chrome-font-subseter.git"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "packageManager": "pnpm@8.15.0"
+}

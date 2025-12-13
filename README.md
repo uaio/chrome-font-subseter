@@ -1,36 +1,124 @@
-# 字体子集化工具 Chrome 插件
+# Font Subseter
 
-一个简单易用的字体子集化工具，帮助您创建只包含所需字符的小字体文件，从而优化网页加载性能。
-
-## 功能特性
-
-- 📁 **字体上传** - 支持上传 TTF、OTF、WOFF、WOFF2 格式的字体文件
-- ⚡ **快捷字符** - 提供数字、字母、标点等常用字符集的快捷按钮
-- ✏️ **自定义输入** - 支持手动输入需要保留的字符
-- ✂️ **生成子集** - 根据输入的字符创建字体子集
-- 📊 **压缩统计** - 显示原始字体和子集的大小对比及压缩率
-- 💾 **一键下载** - 生成的子集可直接下载使用
+字体子集化工具 - 创建字体子集，减小文件大小，提升网页性能。
 
 ## 项目结构
 
+这是一个基于 pnpm workspace 的 monorepo 项目，包含以下子项目：
+
 ```
-chrome-font-subseter/
-├── manifest.json        # 插件配置文件
-├── popup.html           # 弹窗界面
-├── popup.css           # 弹窗样式
-├── popup.js            # 弹窗逻辑
-├── libs/               # 第三方库
-│   ├── opentype.min.js # 字体处理库（需要下载）
-│   └── README.md
-├── icons/              # 插件图标
-│   ├── icon16.png
-│   ├── icon32.png
-│   ├── icon48.png
-│   ├── icon128.png
-│   └── README.md
-├── .gitignore
-└── README.md           # 项目说明
+font-subseter/
+├── packages/
+│   └── core/                # 字体子集化核心库
+├── apps/
+│   ├── chrome-extension/    # Chrome 扩展 (React + Vite)
+│   └── vscode-extension/    # VSCode 插件
+├── pnpm-workspace.yaml      # pnpm workspace 配置
+├── package.json             # 根项目配置
+└── tsconfig.json            # TypeScript 项目引用配置
 ```
+
+## 核心功能
+
+- ✅ 支持 TTF、OTF、WOFF、WOFF2 格式
+- ✅ 自定义需要保留的字符
+- ✅ 实时预览字体效果
+- ✅ 多种输出格式选择
+- ✅ 显示压缩率和文件大小对比
+- ✅ 友好的用户界面
+
+## 安装
+
+### 环境要求
+
+- Node.js >= 18.0.0
+- pnpm >= 8.0.0
+
+### 安装依赖
+
+```bash
+# 安装所有依赖
+pnpm install
+
+# 或者
+pnpm install:all
+```
+
+## 开发
+
+### 开发模式
+
+```bash
+# 同时启动所有项目的开发模式
+pnpm dev
+
+# 单独启动核心库开发
+pnpm dev:core
+
+# 单独启动 Chrome 扩展开发
+pnpm dev:chrome
+```
+
+### 构建
+
+```bash
+# 构建所有项目
+pnpm build
+
+# 单独构建
+pnpm build:core      # 构建核心库
+pnpm build:chrome    # 构建 Chrome 扩展
+pnpm build:vscode    # 构建 VSCode 插件
+```
+
+### 代码质量
+
+```bash
+# 代码检查
+pnpm lint
+
+# 类型检查
+pnpm typecheck
+
+# 运行测试
+pnpm test
+
+# 清理构建产物
+pnpm clean
+```
+
+## 子项目详情
+
+### @font-subseter/core
+
+核心字体子集化库，提供字体解析和子集化功能。
+
+主要特性：
+- 基于 opentype.js 进行字体解析
+- 支持提取指定字符的子集
+- 提供完整的 TypeScript 类型定义
+- 可在浏览器和 Node.js 环境中使用
+
+### Chrome 扩展
+
+基于 React + Vite 的 Chrome 扩展，提供图形化的字体子集化工具。
+
+功能特点：
+- 拖拽上传字体文件
+- 实时字符输入和统计
+- 字体预览功能
+- 多格式输出支持
+- 显示压缩率统计
+
+### VSCode 插件
+
+VSCode 编辑器插件，可以直接在编辑器中创建字体子集。
+
+功能特点：
+- 右键菜单支持
+- 命令面板支持
+- 配置选项
+- 结果预览
 
 ## 安装方法
 

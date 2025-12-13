@@ -1,13 +1,14 @@
 {
-  "manifest_version": 3,
   "name": "字体子集化工具",
-  "version": "1.0.0",
   "description": "一个用于创建字体子集的Chrome插件，帮助减小网页字体文件大小。支持TTF、OTF、WOFF、WOFF2格式，可自定义需要保留的字符，生成压缩后的字体子集。",
+  "version": "1.0.0",
+  "manifest_version": 3,
   "author": "uaio",
   "homepage_url": "https://github.com/uaio/chrome-font-subseter",
-
-  "permissions": [],
-
+  "permissions": [
+    "activeTab",
+    "scripting"
+  ],
   "action": {
     "default_popup": "popup.html",
     "default_title": "字体子集化工具",
@@ -18,14 +19,20 @@
       "128": "icons/icon128.png"
     }
   },
-
   "icons": {
     "16": "icons/icon16.png",
     "32": "icons/icon32.png",
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
   },
-
-  "category": "productivity",
-  "language": "zh_CN"
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"]
+    }
+  ]
 }
