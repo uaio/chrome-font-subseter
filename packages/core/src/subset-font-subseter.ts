@@ -31,9 +31,10 @@ export class SubsetFontSubseter {
 
     try {
       if (isBrowser) {
-        // 浏览器环境：动态导入 subset-font
-        const module = await import('subset-font');
-        this.subsetFont = module.default; // subset-font 默认导出
+        // 浏览器环境：由于 CSP 限制，暂时禁用 subset-font
+        // subset-font 需要 eval() 权限，这在 Chrome 扩展中不安全
+        console.log('在 Chrome 扩展环境中，subset-font 暂时不可用');
+        this.subsetFont = null;
       } else {
         // Node.js 环境
         const module = await import('subset-font');
@@ -41,10 +42,11 @@ export class SubsetFontSubseter {
       }
 
       this.isInitialized = true;
-      console.log('subset-font 引擎初始化成功');
+      console.log(this.subsetFont ? 'subset-font 引擎初始化成功' : 'subset-font 在当前环境不可用');
     } catch (error) {
       console.error('subset-font 初始化失败:', error);
-      throw new SubsetError(`subset-font 初始化失败: ${error instanceof Error ? error.message : '未知错误'}`, 'SUBSET_FONT_INIT_ERROR');
+      this.subsetFont = null;
+      this.isInitialized = true;
     }
   }
 
@@ -72,8 +74,12 @@ export class SubsetFontSubseter {
    * 创建专业字体子集
    */
   async createSubset(options: SubsetOptions): Promise<SubsetResult> {
-    if (!this.originalData || !this.subsetFont) {
-      throw new SubsetError('未加载字体或未初始化', 'NOT_READY');
+    if (!this.originalData) {
+      throw new SubsetError('未加载字体', 'NO_FONT_LOADED');
+    }
+
+    if (!this.subsetFont) {
+      throw new SubsetError('subset-font 在 Chrome 扩展环境中不可用，请使用 opentype.js 引擎', 'ENVIRONMENT_NOT_SUPPORTED');
     }
 
     // 处理字符参数

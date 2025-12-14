@@ -33,7 +33,8 @@ export {
   createHarfBuzzSubset
 } from './harfbuzz-subseter';
 
-// 导出subset-font专业字体子集化
+// 导出subset-font专业字体子集化（仅在Node.js环境可用）
+// 注意：在Chrome扩展中由于CSP限制不可用
 export {
   SubsetFontSubseter,
   createSubsetFont

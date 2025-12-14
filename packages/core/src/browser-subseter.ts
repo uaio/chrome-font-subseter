@@ -10,6 +10,7 @@ import {
 /**
  * 浏览器友好的高级字体子集化器
  * 基于opentype.js，支持完整的OpenType/TrueType处理
+ * 优化版本，提供接近专业级的字体子集化效果
  */
 export class BrowserSubseter {
   private font: opentype.Font | null = null;

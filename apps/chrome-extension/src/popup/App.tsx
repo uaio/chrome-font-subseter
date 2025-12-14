@@ -5,10 +5,10 @@ import {
   createSubset,
   createBrowserSubset,
   createHarfBuzzSubset,
-  createSubsetFont,
   formatFileSize,
   getFontMimeType
 } from '@font-subseter/core';
+import { getSandboxCommunicator } from './sandbox-communicator';
 
 // 声明全局变量类型
 declare global {
@@ -202,17 +202,43 @@ export const App: React.FC = () => {
 
       // 根据选择的引擎使用不同的子集化方法
       let subsetResult;
-      console.log(`使用${subsetEngine === 'subsetfont' ? 'subset-font' : 'opentype.js'}引擎进行子集化`);
 
       if (subsetEngine === 'subsetfont') {
-        // 使用subset-font专业引擎
-        subsetResult = await createSubsetFont(arrayBuffer, charsToKeep, {
-          outputFormat: selectedFormat as any,
-          nameSuffix: 'subset'
-        });
-        console.log('subset-font子集生成成功，大小:', subsetResult.data.byteLength, '压缩率:', subsetResult.compressionRate + '%');
+        // 使用 sandbox 中的 subset-font 专业引擎
+        console.log('使用 subset-font (HarfBuzz) 专业引擎进行子集化');
+
+        try {
+          const communicator = getSandboxCommunicator();
+          const subsetData = await communicator.subset(arrayBuffer, charsToKeep, {
+            format: selectedFormat
+          });
+
+          const originalSize = arrayBuffer.byteLength;
+          const subsetSize = subsetData.byteLength;
+          const compressionRate = Math.round(((originalSize - subsetSize) / originalSize) * 100 * 100) / 100;
+
+          subsetResult = {
+            data: subsetData,
+            originalSize,
+            subsetSize,
+            compressionRate,
+            characterCount: charsToKeep.length
+          };
+
+          console.log('subset-font 子集生成成功，大小:', subsetSize, '压缩率:', compressionRate + '%');
+        } catch (error) {
+          console.error('subset-font 失败，回退到 opentype.js:', error);
+          // 回退到浏览器引擎
+          subsetResult = await createBrowserSubset(arrayBuffer, charsToKeep, {
+            outputFormat: selectedFormat as any,
+            nameSuffix: 'subset'
+          });
+          console.log('opentype.js 回退成功');
+        }
       } else {
         // 使用浏览器友好的opentype.js引擎
+        console.log('使用 opentype.js (高级) 引擎进行子集化');
+
         subsetResult = await createBrowserSubset(arrayBuffer, charsToKeep, {
           outputFormat: selectedFormat as any,
           nameSuffix: 'subset'
@@ -557,7 +583,7 @@ export const App: React.FC = () => {
                 name="subset-engine"
                 value="subsetfont"
                 checked={subsetEngine === 'subsetfont'}
-                onChange={(e) => setSubsetEngine('subsetfont')}
+                onChange={(e) => setSubsetEngine(e.target.value as any)}
               />
               <span>subset-font (HarfBuzz)</span>
               <small>专业级引擎（推荐）</small>
@@ -568,7 +594,7 @@ export const App: React.FC = () => {
                 name="subset-engine"
                 value="browser"
                 checked={subsetEngine === 'browser'}
-                onChange={(e) => setSubsetEngine('browser')}
+                onChange={(e) => setSubsetEngine(e.target.value as any)}
               />
               <span>opentype.js</span>
               <small>浏览器兼容</small>
