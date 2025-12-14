@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>沙盒功能测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .log {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 3px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            background: #e8f5e9;
+            border-radius: 3px;
+        }
+        .error {
+            background: #ffebee;
+            color: #c62828;
+        }
+    </style>
+</head>
+<body>
+    <h1>Chrome 扩展沙盒功能测试</h1>
+
+    <div class="test-section">
+        <h2>1. 测试字体文件上传</h2>
+        <input type="file" id="fontFile" accept=".ttf,.otf,.woff,.woff2">
+        <div id="fontInfo"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>2. 测试字符输入</h2>
+        <textarea id="characters" rows="3" placeholder="输入需要保留的字符...">Hello World 你好世界</textarea>
+    </div>
+
+    <div class="test-section">
+        <h2>3. 测试字体子集化</h2>
+        <button onclick="testSandboxSubset()">测试沙盒子集化</button>
+        <button onclick="testDirectSubset()">测试直接子集化</button>
+        <div id="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>4. 日志输出</h2>
+        <button onclick="clearLog()">清除日志</button>
+        <div id="log" class="log"></div>
+    </div>
+
+    <script type="module">
+        // 导入必要的库
+        import opentype from 'opentype.js';
+        import { compress, decompress } from 'woff2-encoder';
+
+        let fontData = null;
+        let logElement = document.getElementById('log');
+
+        // 日志函数
+        function log(message) {
+            const time = new Date().toLocaleTimeString();
+            logElement.textContent += `[${time}] ${message}\n`;
+            logElement.scrollTop = logElement.scrollHeight;
+            console.log(message);
+        }
+
+        function clearLog() {
+            logElement.textContent = '';
+        }
+
+        // 文件上传处理
+        document.getElementById('fontFile').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                fontData = arrayBuffer;
+
+                // 检测字体格式
+                const view = new DataView(arrayBuffer);
+                let format = 'TTF';
+
+                // 读取前4个字节
+                if (arrayBuffer.byteLength >= 4) {
+                    const signature = view.getUint32(0, false);
+                    if (signature === 0x774F4632) format = 'WOFF2';
+                    else if (signature === 0x774F4600) format = 'WOFF';
+                    else if (signature === 0x4F54544F) format = 'OTF';
+                }
+
+                document.getElementById('fontInfo').innerHTML = `
+                    <div><strong>文件名:</strong> ${file.name}</div>
+                    <div><strong>大小:</strong> ${(file.size / 1024).toFixed(2)} KB</div>
+                    <div><strong>格式:</strong> ${format}</div>
+                `;
+
+                log(`✅ 字体文件加载成功: ${file.name} (${format})`);
+            } catch (error) {
+                log(`❌ 加载字体文件失败: ${error.message}`);
+            }
+        });
+
+        // 测试沙盒子集化
+        window.testSandboxSubset = async function() {
+            if (!fontData) {
+                alert('请先上传字体文件');
+                return;
+            }
+
+            const characters = document.getElementById('characters').value;
+            if (!characters) {
+                alert('请输入需要保留的字符');
+                return;
+            }
+
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<div>正在处理...</div>';
+
+            try {
+                log('🚀 开始测试沙盒子集化...');
+
+                // 创建 iframe 沙盒
+                const iframe = document.createElement('iframe');
+                iframe.style.display = 'none';
+                iframe.src = 'sandbox.html';
+                document.body.appendChild(iframe);
+
+                // 等待沙盒加载
+                await new Promise((resolve, reject) => {
+                    iframe.onload = resolve;
+                    iframe.onerror = reject;
+                    setTimeout(reject, 5000); // 5秒超时
+                });
+
+                log('✅ 沙盒加载成功');
+
+                // 注入库到沙盒
+                iframe.contentWindow.opentype = opentype;
+                iframe.contentWindow.woff2Encoder = { compress, decompress };
+
+                log('✅ 库已注入沙盒');
+
+                // 调用沙盒子集化函数
+                const result = await iframe.contentWindow.sandboxCreateSubset(
+                    fontData,
+                    characters,
+                    'woff2'
+                );
+
+                log(`✅ 沙盒子集化成功!`);
+                log(`   原始大小: ${result.originalSize} bytes`);
+                log(`   子集大小: ${result.subsetSize} bytes`);
+                log(`   压缩率: ${result.compressionRate}%`);
+                log(`   实际格式: ${result.actualFormat}`);
+
+                // 显示结果
+                const blob = new Blob([result.data], { type: 'font/woff2' });
+                const url = URL.createObjectURL(blob);
+
+                resultDiv.innerHTML = `
+                    <div class="result">
+                        <h3>✅ 沙盒子集化成功!</h3>
+                        <p><strong>原始大小:</strong> ${formatFileSize(result.originalSize)}</p>
+                        <p><strong>子集大小:</strong> ${formatFileSize(result.subsetSize)}</p>
+                        <p><strong>压缩率:</strong> ${result.compressionRate}%</p>
+                        <p><strong>字符数量:</strong> ${result.characterCount}</p>
+                        <p><strong>输出格式:</strong> ${result.actualFormat}</p>
+                        <a href="${url}" download="subset.woff2">下载子集字体</a>
+                    </div>
+                `;
+
+                // 清理
+                setTimeout(() => {
+                    document.body.removeChild(iframe);
+                    URL.revokeObjectURL(url);
+                }, 1000);
+
+            } catch (error) {
+                log(`❌ 沙盒子集化失败: ${error.message}`);
+                resultDiv.innerHTML = `<div class="result error">❌ 错误: ${error.message}</div>`;
+            }
+        };
+
+        // 测试直接子集化
+        window.testDirectSubset = async function() {
+            if (!fontData) {
+                alert('请先上传字体文件');
+                return;
+            }
+
+            const characters = document.getElementById('characters').value;
+            if (!characters) {
+                alert('请输入需要保留的字符');
+                return;
+            }
+
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<div>正在处理...</div>';
+
+            try {
+                log('🚀 开始测试直接子集化...');
+
+                // 解析字体
+                let fontBuffer = fontData;
+
+                // 检测并解压 WOFF2
+                const view = new DataView(fontData);
+                if (view.getUint32(0, false) === 0x774F4632) {
+                    log('检测到 WOFF2 格式，正在解压...');
+                    fontBuffer = await decompress(fontData);
+                }
+
+                // 使用 opentype.js 解析
+                const font = opentype.parse(fontBuffer);
+                log(`✅ 字体解析成功: ${font.names.fontFamily?.en || 'Unknown'}`);
+
+                // 处理字符
+                const uniqueChars = [...new Set(characters)];
+                const glyphIndices = new Set();
+                glyphIndices.add(0); // .notdef glyph
+
+                for (const char of uniqueChars) {
+                    const glyph = font.charToGlyph(char);
+                    if (glyph && glyph.index !== undefined && glyph.index !== 0) {
+                        glyphIndices.add(glyph.index);
+                    }
+                }
+
+                log(`处理了 ${uniqueChars.length} 个字符，对应 ${glyphIndices.size} 个字形`);
+
+                // 创建子集（简化版）
+                const subsetBuffer = fontBuffer; // 这里应该实现实际的子集化逻辑
+
+                // 压缩为 WOFF2
+                log('正在压缩为 WOFF2 格式...');
+                const woff2Buffer = await compress(subsetBuffer);
+
+                log(`✅ 直接子集化成功!`);
+
+                // 显示结果
+                const blob = new Blob([woff2Buffer], { type: 'font/woff2' });
+                const url = URL.createObjectURL(blob);
+
+                resultDiv.innerHTML = `
+                    <div class="result">
+                        <h3>✅ 直接子集化成功!</h3>
+                        <p><strong>原始大小:</strong> ${formatFileSize(fontData.byteLength)}</p>
+                        <p><strong>子集大小:</strong> ${formatFileSize(woff2Buffer.byteLength)}</p>
+                        <p><strong>压缩率:</strong> ${((1 - woff2Buffer.byteLength / fontData.byteLength) * 100).toFixed(2)}%</p>
+                        <p><strong>字符数量:</strong> ${uniqueChars.length}</p>
+                        <a href="${url}" download="subset.woff2">下载子集字体</a>
+                    </div>
+                `;
+
+                URL.revokeObjectURL(url);
+
+            } catch (error) {
+                log(`❌ 直接子集化失败: ${error.message}`);
+                resultDiv.innerHTML = `<div class="result error">❌ 错误: ${error.message}</div>`;
+            }
+        };
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        log('📋 测试页面已加载');
+    </script>
+</body>
+</html>

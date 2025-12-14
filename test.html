@@ -5,18 +5,39 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Document</title>
   <style>
+     @font-face {
+      font-family: 'MiSans12';
+      src: url('./MiSans-Semibold_subset.woff') format('woff');
+      font-weight: normal;
+      font-style: normal;
+     }
     @font-face {
       font-family: 'MiSans';
       src: url('./MiSans-Semibold_subset.woff2') format('woff2');
       font-weight: normal;
       font-style: normal;
+    }@font-face {
+      font-family: 'MiSans1';
+      src: url('./MiSans-Semibold_subset1.woff2') format('woff2');
+      font-weight: normal;
+      font-style: normal;
     }
-    body {
-      font-family: 'MiSans';
-    }
+      .t1 {
+        font-family: 'MiSans';
+      }
+      .t2 {
+        font-family: 'MiSans1';
+      }
+      .t3 {
+        font-family: 'MiSans12';
+      }
   </style>
 </head>
 <body>
-  123131231231231是啊是缓一缓变变变
+  <p class="t1"> 123131231231231是啊是缓一缓变变变</p>
+
+  <p class="t2">123131231231231是啊是缓</p>
+
+  <p class="t3">123131231231231是啊是缓11</p>
 </body>
 </html>

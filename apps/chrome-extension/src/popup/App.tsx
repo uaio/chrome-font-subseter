@@ -1,19 +1,24 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import {
   FontSubseter,
+  OpentypeFontSubseter,
+  SandboxFontSubseter,
   parseFont,
   createSubset,
-  createBrowserSubset,
-  createHarfBuzzSubset,
+  createOpentypeSubset,
+  createSandboxSubset,
   formatFileSize,
   getFontMimeType
 } from '@font-subseter/core';
-import { getSandboxCommunicator } from './sandbox-communicator';
 
 // 声明全局变量类型
 declare global {
   interface Window {
     previewFontUrl?: string;
+    fontEditorCore?: any;
+    woff2Ready?: boolean;
+    opentype?: any;
+    woff2Encoder?: any;
   }
 }
 
@@ -33,7 +38,6 @@ export const App: React.FC = () => {
   const [selectedFormat, setSelectedFormat] = useState('woff2');
   const [generatedFormat, setGeneratedFormat] = useState<string>('woff2');
   const [usePreviewFont, setUsePreviewFont] = useState(false); // 控制是否使用上传的字体预览
-  const [subsetEngine, setSubsetEngine] = useState<'browser' | 'subsetfont'>('subsetfont'); // 选择子集化引擎
 
   // 引用
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -200,64 +204,37 @@ export const App: React.FC = () => {
 
       updateProgress(progressFill, 50);
 
-      // 根据选择的引擎使用不同的子集化方法
-      let subsetResult;
+      // 使用沙盒环境进行子集化（避免CSP违规）
+    let subsetResult;
 
-      if (subsetEngine === 'subsetfont') {
-        // 使用 sandbox 中的 subset-font 专业引擎
-        console.log('使用 subset-font (HarfBuzz) 专业引擎进行子集化');
+    try {
+        console.log('🚀 使用沙盒环境处理格式:', selectedFormat);
 
-        try {
-          const communicator = getSandboxCommunicator();
-          const subsetResultData = await communicator.subset(arrayBuffer, charsToKeep, {
-            format: selectedFormat
-          });
-
-          const originalSize = arrayBuffer.byteLength;
-          const subsetSize = subsetResultData.data.byteLength;
-          const compressionRate = Math.round(((originalSize - subsetSize) / originalSize) * 100 * 100) / 100;
-
-          subsetResult = {
-            data: subsetResultData.data.buffer,
-            originalSize,
-            subsetSize,
-            compressionRate,
-            characterCount: charsToKeep.length
-          };
-
-          // 使用返回的实际格式（可能和选择的格式不同）
-          const actualFormat = subsetResultData.format || selectedFormat;
-          console.log('subset-font 子集生成成功，大小:', subsetSize, '压缩率:', compressionRate + '%', '格式:', actualFormat);
-
-          // 保存实际生成的格式
-          setGeneratedFormat(actualFormat);
-        } catch (error) {
-          console.error('subset-font 失败，回退到 opentype.js:', error);
-          // 回退到浏览器引擎
-          subsetResult = await createBrowserSubset(arrayBuffer, charsToKeep, {
-            outputFormat: selectedFormat as any,
-            nameSuffix: 'subset'
-          });
-          console.log('opentype.js 回退成功');
-          // 保存格式
-          setGeneratedFormat(selectedFormat);
-        }
-      } else {
-        // 使用浏览器友好的opentype.js引擎
-        console.log('使用 opentype.js (高级) 引擎进行子集化');
-
-        subsetResult = await createBrowserSubset(arrayBuffer, charsToKeep, {
+        // 使用沙盒字体子集化器
+        subsetResult = await createSandboxSubset(arrayBuffer, charsToKeep, {
           outputFormat: selectedFormat as any,
-          nameSuffix: 'subset'
+          preserveMetadata: true
         });
-        console.log('opentype.js子集生成成功，大小:', subsetResult.data.byteLength, '压缩率:', subsetResult.compressionRate + '%');
-        // 保存格式
-        setGeneratedFormat(selectedFormat);
+
+        console.log('✅ 沙盒字体子集化成功，实际格式:', subsetResult.actualFormat);
+
+        // 显示格式信息
+        if (subsetResult.actualFormat !== selectedFormat) {
+          console.log(`ℹ️ 格式转换: ${selectedFormat} → ${subsetResult.actualFormat}`);
+        }
+
+        console.log('✅ 子集生成成功，大小:', subsetResult.data.byteLength, '压缩率:', subsetResult.compressionRate + '%', '实际格式:', subsetResult.actualFormat);
+      } catch (error) {
+        console.error('字体处理失败:', error);
+        throw new Error(`字体处理失败: ${error instanceof Error ? error.message : '未知错误'}`);
       }
 
       updateProgress(progressFill, 90);
 
       setGeneratedSubset(subsetResult.data);
+      // 使用实际生成的格式
+      setGeneratedFormat(subsetResult.actualFormat);
+      console.log('实际生成的格式:', subsetResult.actualFormat);
 
       updateProgress(progressFill, 100);
 
@@ -267,7 +244,57 @@ export const App: React.FC = () => {
       showMessage('字体子集生成成功！', 'success');
     } catch (error) {
       console.error('生成子集失败:', error);
-      showMessage('生成字体子集失败: ' + (error instanceof Error ? error.message : '未知错误'), 'error');
+      const errorMessage = error instanceof Error ? error.message : '未知错误';
+
+      // 检查是否是 WOFF2 支持问题
+      if (errorMessage.includes('WOFF2_NOT_SUPPORTED') || errorMessage.includes('WebAssembly')) {
+        // 提供自动重试选项，使用 WOFF 格式
+        if (selectedFormat === 'woff2') {
+          // 显示详细错误和自动重试选项
+          const retryMessage = `WOFF2 格式在当前环境中不可用。点击"使用 WOFF 格式重试"按钮继续。`;
+          showMessage(retryMessage, 'warning');
+
+          // 添加自动重试按钮
+          const container = document.querySelector('.subset-controls');
+          if (container && !document.querySelector('.retry-woff-button')) {
+            const retryButton = document.createElement('button');
+            retryButton.className = 'retry-woff-button';
+            retryButton.textContent = '使用 WOFF 格式重试';
+            retryButton.style.cssText = `
+              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+              color: white;
+              border: none;
+              padding: 8px 16px;
+              border-radius: 6px;
+              cursor: pointer;
+              margin-top: 8px;
+              font-size: 14px;
+              width: 100%;
+              transition: all 0.3s ease;
+            `;
+            retryButton.onmouseover = () => {
+              retryButton.style.transform = 'translateY(-2px)';
+              retryButton.style.boxShadow = '0 4px 12px rgba(102, 126, 234, 0.4)';
+            };
+            retryButton.onmouseout = () => {
+              retryButton.style.transform = 'translateY(0)';
+              retryButton.style.boxShadow = 'none';
+            };
+            retryButton.onclick = () => {
+              // 切换到 WOFF 格式并重试
+              setSelectedFormat('woff');
+              setTimeout(() => {
+                generateSubset();
+              }, 100);
+              retryButton.remove();
+            };
+            container.appendChild(retryButton);
+          }
+          return;
+        }
+      }
+
+      showMessage('生成字体子集失败: ' + errorMessage, 'error');
     } finally {
       // 恢复按钮状态
       if (button) {
@@ -301,9 +328,16 @@ export const App: React.FC = () => {
   
   // 下载子集
   const downloadSubset = useCallback(() => {
-    if (!generatedSubset) return;
+    if (!generatedSubset) {
+      console.log('没有可下载的子集字体');
+      return;
+    }
 
     const format = generatedFormat; // 使用生成时的格式
+    console.log('下载格式:', format);
+    console.log('generatedFormat 值:', generatedFormat);
+    console.log('selectedFormat 值:', selectedFormat);
+
     const mimeType = getFontMimeType(format);
     const blob = new Blob([generatedSubset], { type: mimeType });
     const url = URL.createObjectURL(blob);
@@ -311,7 +345,17 @@ export const App: React.FC = () => {
     // 获取文件名
     const originalName = fontFile.name;
     const nameWithoutExt = originalName.substring(0, originalName.lastIndexOf('.')) || originalName;
-    const fileName = `${nameWithoutExt}_subset.${format}`;
+
+    // 确定文件扩展名
+    let fileExtension = format;
+    if (format === 'sfnt') {
+      fileExtension = 'ttf'; // sfnt 格式使用 .ttf 扩展名
+    }
+
+    const fileName = `${nameWithoutExt}_subset.${fileExtension}`;
+
+    console.log('下载文件名:', fileName);
+    console.log('MIME类型:', mimeType);
 
     // 创建下载链接并触发下载
     const a = document.createElement('a');
@@ -325,7 +369,7 @@ export const App: React.FC = () => {
     URL.revokeObjectURL(url);
 
     showMessage(`字体子集 (${format.toUpperCase()}) 下载成功！`, 'success');
-  }, [generatedSubset, generatedFormat, fontFile]);
+  }, [generatedSubset, generatedFormat, fontFile, selectedFormat]);
 
   
   // 更新预览
@@ -612,36 +656,6 @@ export const App: React.FC = () => {
       </div>
 
       <div className="section">
-        <div className="engine-selector">
-          <h3>子集化引擎</h3>
-          <div className="engine-options">
-            <label className="engine-option">
-              <input
-                type="radio"
-                name="subset-engine"
-                value="subsetfont"
-                checked={subsetEngine === 'subsetfont'}
-                onChange={(e) => setSubsetEngine(e.target.value as any)}
-              />
-              <span>subset-font (HarfBuzz)</span>
-              <small>专业级引擎（推荐）</small>
-            </label>
-            <label className="engine-option">
-              <input
-                type="radio"
-                name="subset-engine"
-                value="browser"
-                checked={subsetEngine === 'browser'}
-                onChange={(e) => setSubsetEngine(e.target.value as any)}
-              />
-              <span>opentype.js</span>
-              <small>浏览器兼容</small>
-            </label>
-          </div>
-          <p style={{ fontSize: '12px', color: '#666', margin: '8px 0 0' }}>
-            💡 subset-font 基于 HarfBuzz，提供真正的字体子集化，显著减少文件大小
-          </p>
-        </div>
         <button
           id="generate-subset"
           className="btn-primary"

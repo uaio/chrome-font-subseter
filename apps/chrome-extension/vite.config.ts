@@ -10,7 +10,7 @@ export default defineConfig({
       input: {
         popup: resolve(__dirname, 'src/popup.html'),
         background: resolve(__dirname, 'src/background/index.ts'),
-        content: resolve(__dirname, 'src/content/index.ts'),
+        content: resolve(__dirname, 'src/content/index.ts')
       },
       output: {
         entryFileNames: '[name].js',
@@ -26,7 +26,6 @@ export default defineConfig({
     global: 'globalThis'
   },
   optimizeDeps: {
-    exclude: ['harfbuzzjs', 'subset-font'] // 排除字体库的预构建
-  },
-  assetsInclude: ['**/*.wasm'] // 包含WASM文件
+    exclude: [] // 不再需要排除 fonteditor-core
+  }
 });

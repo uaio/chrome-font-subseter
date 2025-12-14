@@ -11,40 +11,13 @@ export {
   SubsetError
 } from './types';
 
-// 导出主要功能类
-export {
-  FontSubseter
-} from './subseter';
+// 注意：opentype.js 功能已集成到 sandbox-font-subseter.ts 中
 
-// 导出便捷函数
+// 导出沙盒字体子集化器
 export {
-  createSubset
-} from './subseter';
-
-// 导出浏览器友好的字体子集化
-export {
-  BrowserSubseter,
-  createBrowserSubset
-} from './browser-subseter';
-
-// 导出HarfBuzz.js专业字体子集化
-export {
-  HarfBuzzSubseter,
-  createHarfBuzzSubset
-} from './harfbuzz-subseter';
-
-// 导出subset-font专业字体子集化（仅在Node.js环境可用）
-// 注意：在Chrome扩展中由于CSP限制不可用
-export {
-  SubsetFontSubseter,
-  createSubsetFont
-} from './subset-font-subseter';
-
-// 注意：专业字体子集化(fontkit)仅在Node.js环境中可用
-// export {
-//   ProfessionalSubseter,
-//   createProfessionalSubset
-// } from './professional-subseter';
+  SandboxFontSubseter,
+  createSandboxSubset
+} from './sandbox-font-subseter';
 
 // 导出解析器功能
 export {
@@ -71,5 +44,5 @@ export {
   supportsArrayBuffer
 } from './utils';
 
-// 提供默认导出
-export { FontSubseter as default } from './subseter';
+// 提供默认导出（使用沙盒子集化器作为默认）
+export { SandboxFontSubseter as default } from './sandbox-font-subseter';

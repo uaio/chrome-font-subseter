@@ -35,8 +35,8 @@ export function getAllCharacters(font: opentype.Font): string[] {
   const chars: string[] = [];
 
   for (let i = 0; i < font.glyphs.length; i++) {
-    const glyph = font.glyphs[i];
-    if (glyph.unicode) {
+    const glyph = font.glyphs.get(i);
+    if (glyph && glyph.unicode) {
       chars.push(String.fromCodePoint(glyph.unicode));
     }
   }

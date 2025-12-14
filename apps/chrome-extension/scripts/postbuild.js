@@ -32,4 +32,26 @@ const srcIcons = path.join(__dirname, '../public/icons');
 const distIcons = path.join(__dirname, '../dist/icons');
 copyDir(srcIcons, distIcons);
 
+// 复制沙盒文件
+const srcSandboxHtml = path.join(__dirname, '../public/sandbox.html');
+const srcSandboxJs = path.join(__dirname, '../public/sandbox-standalone.js');
+const distSandboxHtml = path.join(__dirname, '../dist/sandbox.html');
+const distSandboxJs = path.join(__dirname, '../dist/sandbox-standalone.js');
+
+if (fs.existsSync(srcSandboxHtml)) {
+  fs.copyFileSync(srcSandboxHtml, distSandboxHtml);
+  console.log('✓ 复制 sandbox.html 文件到 dist 目录');
+} else {
+  console.warn('⚠️  未找到 sandbox.html 文件');
+}
+
+if (fs.existsSync(srcSandboxJs)) {
+  fs.copyFileSync(srcSandboxJs, distSandboxJs);
+  console.log('✓ 复制 sandbox-standalone.js 文件到 dist 目录');
+} else {
+  console.warn('⚠️  未找到 sandbox-standalone.js 文件');
+}
+
+console.log('✅ 构建完成 - woff2-encoder 不再需要 WASM 文件');
+
 console.log('Post-build complete!');

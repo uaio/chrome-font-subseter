@@ -1,7 +1,7 @@
 /**
  * 支持的字体格式
  */
-export type FontFormat = 'ttf' | 'otf' | 'woff' | 'woff2';
+export type FontFormat = 'ttf' | 'otf' | 'woff' | 'woff2' | 'sfnt';
 
 /**
  * 字体信息
@@ -57,6 +57,8 @@ export interface SubsetResult {
   compressionRate: number;
   /** 保留的字符数 */
   characterCount: number;
+  /** 实际输出的格式 */
+  actualFormat: FontFormat;
 }
 
 /**

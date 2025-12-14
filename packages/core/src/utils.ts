@@ -30,9 +30,10 @@ export function getFontMimeType(format: FontFormat): string {
     ttf: 'font/ttf',
     otf: 'font/otf',
     woff: 'font/woff',
-    woff2: 'font/woff2'
+    woff2: 'font/woff2',
+    sfnt: 'font/sfnt'  // 添加 sfnt 格式支持
   };
-  return mimeTypes[format];
+  return mimeTypes[format] || 'font/ttf'; // 默认返回 ttf MIME 类型
 }
 
 /**
