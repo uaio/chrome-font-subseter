@@ -209,23 +209,28 @@ export const App: React.FC = () => {
 
         try {
           const communicator = getSandboxCommunicator();
-          const subsetData = await communicator.subset(arrayBuffer, charsToKeep, {
+          const subsetResultData = await communicator.subset(arrayBuffer, charsToKeep, {
             format: selectedFormat
           });
 
           const originalSize = arrayBuffer.byteLength;
-          const subsetSize = subsetData.byteLength;
+          const subsetSize = subsetResultData.data.byteLength;
           const compressionRate = Math.round(((originalSize - subsetSize) / originalSize) * 100 * 100) / 100;
 
           subsetResult = {
-            data: subsetData,
+            data: subsetResultData.data.buffer,
             originalSize,
             subsetSize,
             compressionRate,
             characterCount: charsToKeep.length
           };
 
-          console.log('subset-font 子集生成成功，大小:', subsetSize, '压缩率:', compressionRate + '%');
+          // 使用返回的实际格式（可能和选择的格式不同）
+          const actualFormat = subsetResultData.format || selectedFormat;
+          console.log('subset-font 子集生成成功，大小:', subsetSize, '压缩率:', compressionRate + '%', '格式:', actualFormat);
+
+          // 保存实际生成的格式
+          setGeneratedFormat(actualFormat);
         } catch (error) {
           console.error('subset-font 失败，回退到 opentype.js:', error);
           // 回退到浏览器引擎
@@ -234,6 +239,8 @@ export const App: React.FC = () => {
             nameSuffix: 'subset'
           });
           console.log('opentype.js 回退成功');
+          // 保存格式
+          setGeneratedFormat(selectedFormat);
         }
       } else {
         // 使用浏览器友好的opentype.js引擎
@@ -244,12 +251,13 @@ export const App: React.FC = () => {
           nameSuffix: 'subset'
         });
         console.log('opentype.js子集生成成功，大小:', subsetResult.data.byteLength, '压缩率:', subsetResult.compressionRate + '%');
+        // 保存格式
+        setGeneratedFormat(selectedFormat);
       }
 
       updateProgress(progressFill, 90);
 
       setGeneratedSubset(subsetResult.data);
-      setGeneratedFormat(selectedFormat);
 
       updateProgress(progressFill, 100);
 
@@ -361,32 +369,26 @@ export const App: React.FC = () => {
         document.head.appendChild(previewStyle);
       }
 
-      if (usePreviewFont && fontData && fontFile) {
-        // 应用上传的字体到预览文本
-        if (window.previewFontUrl) {
-          URL.revokeObjectURL(window.previewFontUrl);
-        }
+      // 清理旧的字体URL
+      if (window.previewFontUrl) {
+        URL.revokeObjectURL(window.previewFontUrl);
+      }
 
-        let fontBuffer: ArrayBuffer;
-        if (fontData instanceof ArrayBuffer) {
-          fontBuffer = fontData;
-        } else {
-          // 如果fontData是parsedFont对象，使用原始文件
-          fontBuffer = fontFile.arrayBuffer ? await fontFile.arrayBuffer() : fontFile as any;
-        }
-        const fontBlob = new Blob([fontBuffer], { type: 'font/*' });
-        window.previewFontUrl = URL.createObjectURL(fontBlob);
+      let fontBuffer: ArrayBuffer;
+      let fontFormat: string;
+      let fontSource: string;
 
-        const fontName = `PreviewFont_${Date.now()}`;
-        previewStyle.textContent = `
-          @font-face {
-            font-family: '${fontName}';
-            src: url('${window.previewFontUrl}') format('truetype');
-          }
-          #preview-text {
-            font-family: '${fontName}', monospace !important;
-          }
-        `;
+      // 决定使用哪个字体进行预览
+      if (generatedSubset && usePreviewFont) {
+        // 使用生成的子集字体
+        fontBuffer = generatedSubset;
+        fontFormat = generatedFormat;
+        fontSource = '子集字体';
+      } else if (fontFile) {
+        // 使用原始字体
+        fontBuffer = await fontFile.arrayBuffer();
+        fontFormat = fontFile.name.split('.').pop()?.toLowerCase() || 'ttf';
+        fontSource = '原始字体';
       } else {
         // 使用默认字体
         previewStyle.textContent = `
@@ -394,9 +396,45 @@ export const App: React.FC = () => {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', Roboto, sans-serif !important;
           }
         `;
+        return;
       }
+
+      // 创建字体blob
+      const mimeType = getFontMimeType(fontFormat as any);
+      const fontBlob = new Blob([fontBuffer], { type: mimeType });
+      window.previewFontUrl = URL.createObjectURL(fontBlob);
+
+      // 根据格式设置正确的format描述
+      const formatMap: Record<string, string> = {
+        'ttf': 'truetype',
+        'otf': 'opentype',
+        'woff': 'woff',
+        'woff2': 'woff2'
+      };
+
+      const fontFormatStr = formatMap[fontFormat] || 'truetype';
+      const fontName = `PreviewFont_${Date.now()}`;
+
+      previewStyle.textContent = `
+        @font-face {
+          font-family: '${fontName}';
+          src: url('${window.previewFontUrl}') format('${fontFormatStr}');
+        }
+        #preview-text {
+          font-family: '${fontName}', monospace !important;
+        }
+      `;
+
+      console.log(`预览使用: ${fontSource}, 格式: ${fontFormat}`);
+    } else {
+      // 使用默认字体
+      previewStyle.textContent = `
+        #preview-text {
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', Roboto, sans-serif !important;
+        }
+      `;
     }
-  }, [fontFile, fontData, usePreviewFont]);
+  }, [fontFile, fontData, usePreviewFont, generatedSubset, generatedFormat]);
 
   // 显示消息
   const showMessage = useCallback((text: string, type: 'success' | 'error') => {
@@ -565,7 +603,7 @@ export const App: React.FC = () => {
                   setTimeout(() => updatePreview(), 0);
                 }}
               >
-                {usePreviewFont ? '使用默认字体' : '使用上传字体'}
+                {generatedSubset ? (usePreviewFont ? '使用原始字体' : '使用子集字体') : (usePreviewFont ? '使用默认字体' : '使用上传字体')}
               </button>
             </div>
             <p id="preview-text">预览文本</p>

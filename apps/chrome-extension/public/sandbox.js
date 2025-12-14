@@ -55,6 +55,7 @@ window.addEventListener('message', async (event) => {
       data: Array.from(new Uint8Array(result)), // 转为普通数组以便传输
       originalSize: fontBuffer.length,
       newSize: result.byteLength,
+      format: options.format || 'woff2', // 返回实际使用的格式
     }, event.origin);
 
   } catch (error) {

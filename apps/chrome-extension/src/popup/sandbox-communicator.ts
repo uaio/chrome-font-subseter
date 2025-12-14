@@ -35,11 +35,16 @@ export class SandboxCommunicator {
           console.log('Sandbox 已准备好');
           resolve();
         } else if (event.data.type === 'SUBSET_RESULT') {
-          const { id, success, data, error } = event.data;
+          const { id, success, data, error, format } = event.data;
           const pending = this.pendingRequests.get(id);
           if (pending) {
             if (success) {
-              pending.resolve(new Uint8Array(data));
+              // 包含格式信息
+              const result = {
+                data: new Uint8Array(data),
+                format: format
+              };
+              pending.resolve(result);
             } else {
               pending.reject(new Error(error));
             }
