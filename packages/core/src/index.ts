@@ -27,6 +27,18 @@ export {
   createBrowserSubset
 } from './browser-subseter';
 
+// 导出HarfBuzz.js专业字体子集化
+export {
+  HarfBuzzSubseter,
+  createHarfBuzzSubset
+} from './harfbuzz-subseter';
+
+// 导出subset-font专业字体子集化
+export {
+  SubsetFontSubseter,
+  createSubsetFont
+} from './subset-font-subseter';
+
 // 注意：专业字体子集化(fontkit)仅在Node.js环境中可用
 // export {
 //   ProfessionalSubseter,

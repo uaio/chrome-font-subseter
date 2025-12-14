@@ -32,7 +32,9 @@
   },
   "dependencies": {
     "fontkit": "^2.0.4",
+    "harfbuzzjs": "^0.4.13",
     "opentype.js": "^1.3.4",
-    "pako": "^2.1.0"
+    "pako": "^2.1.0",
+    "subset-font": "^2.4.0"
   }
 }

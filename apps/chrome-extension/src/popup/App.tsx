@@ -4,6 +4,8 @@ import {
   parseFont,
   createSubset,
   createBrowserSubset,
+  createHarfBuzzSubset,
+  createSubsetFont,
   formatFileSize,
   getFontMimeType
 } from '@font-subseter/core';
@@ -31,6 +33,7 @@ export const App: React.FC = () => {
   const [selectedFormat, setSelectedFormat] = useState('woff2');
   const [generatedFormat, setGeneratedFormat] = useState<string>('woff2');
   const [usePreviewFont, setUsePreviewFont] = useState(false); // 控制是否使用上传的字体预览
+  const [subsetEngine, setSubsetEngine] = useState<'browser' | 'subsetfont'>('subsetfont'); // 选择子集化引擎
 
   // 引用
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -197,12 +200,25 @@ export const App: React.FC = () => {
 
       updateProgress(progressFill, 50);
 
-      // 使用浏览器友好的高级字体子集化引擎
-      const subsetResult = await createBrowserSubset(arrayBuffer, charsToKeep, {
-        outputFormat: selectedFormat as any,
-        nameSuffix: 'subset'
-      });
-      console.log('高级子集生成成功，大小:', subsetResult.data.byteLength, '压缩率:', subsetResult.compressionRate + '%');
+      // 根据选择的引擎使用不同的子集化方法
+      let subsetResult;
+      console.log(`使用${subsetEngine === 'subsetfont' ? 'subset-font' : 'opentype.js'}引擎进行子集化`);
+
+      if (subsetEngine === 'subsetfont') {
+        // 使用subset-font专业引擎
+        subsetResult = await createSubsetFont(arrayBuffer, charsToKeep, {
+          outputFormat: selectedFormat as any,
+          nameSuffix: 'subset'
+        });
+        console.log('subset-font子集生成成功，大小:', subsetResult.data.byteLength, '压缩率:', subsetResult.compressionRate + '%');
+      } else {
+        // 使用浏览器友好的opentype.js引擎
+        subsetResult = await createBrowserSubset(arrayBuffer, charsToKeep, {
+          outputFormat: selectedFormat as any,
+          nameSuffix: 'subset'
+        });
+        console.log('opentype.js子集生成成功，大小:', subsetResult.data.byteLength, '压缩率:', subsetResult.compressionRate + '%');
+      }
 
       updateProgress(progressFill, 90);
 
@@ -532,6 +548,36 @@ export const App: React.FC = () => {
       </div>
 
       <div className="section">
+        <div className="engine-selector">
+          <h3>子集化引擎</h3>
+          <div className="engine-options">
+            <label className="engine-option">
+              <input
+                type="radio"
+                name="subset-engine"
+                value="subsetfont"
+                checked={subsetEngine === 'subsetfont'}
+                onChange={(e) => setSubsetEngine('subsetfont')}
+              />
+              <span>subset-font (HarfBuzz)</span>
+              <small>专业级引擎（推荐）</small>
+            </label>
+            <label className="engine-option">
+              <input
+                type="radio"
+                name="subset-engine"
+                value="browser"
+                checked={subsetEngine === 'browser'}
+                onChange={(e) => setSubsetEngine('browser')}
+              />
+              <span>opentype.js</span>
+              <small>浏览器兼容</small>
+            </label>
+          </div>
+          <p style={{ fontSize: '12px', color: '#666', margin: '8px 0 0' }}>
+            💡 subset-font 基于 HarfBuzz，提供真正的字体子集化，显著减少文件大小
+          </p>
+        </div>
         <button
           id="generate-subset"
           className="btn-primary"

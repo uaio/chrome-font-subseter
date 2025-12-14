@@ -35,6 +35,12 @@ export interface SubsetOptions {
   preserveMetadata?: boolean;
   /** 字体名称后缀 */
   nameSuffix?: string;
+  /** 可变字体轴裁剪 (subset-font) */
+  variationAxes?: {
+    [axisTag: string]: number | { min?: number; max?: number; default?: number };
+  };
+  /** 保留的 name 表 ID (subset-font) */
+  preserveNameIds?: number[];
 }
 
 /**
